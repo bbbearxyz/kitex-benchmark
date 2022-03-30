@@ -20,9 +20,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"math/rand"
 	"strconv"
-	"time"
 
 	"github.com/cloudwego/kitex-benchmark/perf"
 )
@@ -34,8 +32,6 @@ var (
 	concurrent int
 	poolSize   int
 	sleepTime  int
-	field	   int64
-	latency    int64
 )
 
 type Options struct {
@@ -47,7 +43,7 @@ type Options struct {
 type ClientNewer func(opt *Options) Client
 
 type Client interface {
-	Echo(action, msg string, field, latency, payload int64) (err error)
+	Echo(action, msg string) (err error)
 }
 
 type Response struct {
@@ -62,21 +58,7 @@ func initFlags() {
 	flag.Int64Var(&total, "n", 1, "call total nums")
 	flag.IntVar(&poolSize, "pool", 10, "conn poll size")
 	flag.IntVar(&sleepTime, "sleep", 0, "sleep time for every request handler")
-	//增加两个字段 field latency
-	// field是指pb字段个数 latency指server手动增加的延迟
-	flag.Int64Var(&field, "field", 1, "pb field number")
-	flag.Int64Var(&latency, "latency", 0, "latency in server")
-}
-
-func GetRandomString(l int) string {
-	str := "0123456789abcdefghijklmnopqrstuvwxyz"
-	bytes := []byte(str)
-	var result []byte
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	for i := 0; i < l; i ++ {
-		result = append(result, bytes[r.Intn(len(bytes))])
-	}
-	return string(result)
+	flag.Parse()
 }
 
 func Main(name string, newer ClientNewer) {
@@ -99,22 +81,20 @@ func Main(name string, newer ClientNewer) {
 		PoolSize: poolSize,
 	}
 	cli := newer(opt)
-	// 随机生成字符
-	payload := GetRandomString(echoSize)
-
+	payload := string(make([]byte, echoSize))
 	action := EchoAction
 	if sleepTime > 0 {
 		action = SleepAction
 		st := strconv.Itoa(sleepTime)
 		payload = fmt.Sprintf("%s,%s", st, payload[len(st)+1:])
 	}
-	handler := func() error { return cli.Echo(action, payload, field, latency, int64(echoSize)) }
+	handler := func() error { return cli.Echo(action, payload) }
 
 	// === warming ===
 	r.Warmup(handler, concurrent, 100*1000)
 
 	// === beginning ===
-	if err := cli.Echo(BeginAction, "", 0, 0, 0); err != nil {
+	if err := cli.Echo(BeginAction, ""); err != nil {
 		log.Fatalf("beginning server failed: %v", err)
 	}
 	recorder := perf.NewRecorder(fmt.Sprintf("%s@Client", name))
@@ -125,7 +105,7 @@ func Main(name string, newer ClientNewer) {
 
 	// == ending ===
 	recorder.End()
-	if err := cli.Echo(EndAction, "", 0, 0, 0); err != nil {
+	if err := cli.Echo(EndAction, ""); err != nil {
 		log.Fatalf("ending server failed: %v", err)
 	}
 

@@ -19,33 +19,29 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
-	"net"
 
-	"google.golang.org/grpc"
+	"github.com/smallnest/rpcx/log"
+	"github.com/smallnest/rpcx/server"
 
-	grpcg "github.com/cloudwego/kitex-benchmark/codec/protobuf/grpc_gen"
+	gogo "github.com/cloudwego/kitex-benchmark/codec/protobuf/gogo_gen"
 	"github.com/cloudwego/kitex-benchmark/perf"
 	"github.com/cloudwego/kitex-benchmark/runner"
 )
 
 const (
-	port = 8000
+	port = 8003
 )
 
-var recorder = perf.NewRecorder("GRPC@Server")
+type Echo struct{}
 
-type server struct {
-	grpcg.UnimplementedEchoServer
-}
+var recorder = perf.NewRecorder("RPCX@Server")
 
-func (s *server) Echo(ctx context.Context, req *grpcg.Request) (*grpcg.Response, error) {
-	resp := runner.ProcessRequest(recorder, req.Action, req.Msg)
+func (s *Echo) Echo(ctx context.Context, args *gogo.Request, reply *gogo.Response) error {
+	resp := runner.ProcessRequest(recorder, args.Action, args.Msg)
 
-	return &grpcg.Response{
-		Msg:    resp.Msg,
-		Action: resp.Action,
-	}, nil
+	reply.Action = resp.Action
+	reply.Msg = resp.Msg
+	return nil
 }
 
 func main() {
@@ -54,15 +50,10 @@ func main() {
 		perf.ServeMonitor(fmt.Sprintf(":%d", port+10000))
 	}()
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-	s := grpc.NewServer()
-	grpcg.RegisterEchoServer(s, &server{})
-	log.Printf("server listening at %v", lis.Addr())
+	server.UsePool = true
+	log.SetDummyLogger()
 
-	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
+	s := server.NewServer()
+	s.Register(new(Echo), "")
+	s.Serve("tcp", fmt.Sprintf(":%d", port))
 }

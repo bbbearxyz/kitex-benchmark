@@ -18,52 +18,44 @@ package main
 
 import (
 	"context"
-	"log"
 	"sync"
-	"time"
 
-	"google.golang.org/grpc"
+	"github.com/cloudwego/kitex/client"
+	"github.com/cloudwego/kitex/transport"
 
-	grpcg "github.com/cloudwego/kitex-benchmark/codec/protobuf/grpc_gen"
+	"github.com/cloudwego/kitex-benchmark/codec/thrift/kitex_gen/echo"
+	"github.com/cloudwego/kitex-benchmark/codec/thrift/kitex_gen/echo/echoserver"
 	"github.com/cloudwego/kitex-benchmark/runner"
 )
 
-func NewPBGrpcClient(opt *runner.Options) runner.Client {
-	cli := &pbGrpcClient{}
+func NewThriftKiteXClient(opt *runner.Options) runner.Client {
+	cli := &thriftKiteXClient{}
+	cli.client = echoserver.MustNewClient("test.echo.kitex",
+		client.WithTransportProtocol(transport.Framed),
+		client.WithHostPorts(opt.Address),
+		client.WithMuxConnection(2))
 	cli.reqPool = &sync.Pool{
 		New: func() interface{} {
-			return &grpcg.Request{}
+			return &echo.Request{}
 		},
 	}
-	cli.connpool = runner.NewPool(func() interface{} {
-		// Set up a connection to the server.
-		conn, err := grpc.Dial(opt.Address, grpc.WithInsecure())
-		if err != nil {
-			log.Fatalf("did not connect: %v", err)
-		}
-		return grpcg.NewEchoClient(conn)
-	}, opt.PoolSize)
 	return cli
 }
 
-type pbGrpcClient struct {
-	reqPool  *sync.Pool
-	connpool *runner.Pool
+type thriftKiteXClient struct {
+	client  echoserver.Client
+	reqPool *sync.Pool
 }
 
-func (cli *pbGrpcClient) Echo(action, msg string) error {
+func (cli *thriftKiteXClient) Echo(action, msg string) error {
 	ctx := context.Background()
-	req := cli.reqPool.Get().(*grpcg.Request)
+	req := cli.reqPool.Get().(*echo.Request)
 	defer cli.reqPool.Put(req)
 
 	req.Action = action
 	req.Msg = msg
 
-	pbcli := cli.connpool.Get().(grpcg.EchoClient)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	reply, err := pbcli.Echo(ctx, req)
-
+	reply, err := cli.client.Echo(ctx, req)
 	if reply != nil {
 		runner.ProcessResponse(reply.Action, reply.Msg)
 	}
