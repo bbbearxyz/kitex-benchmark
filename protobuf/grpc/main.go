@@ -21,12 +21,13 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"time"
 
 	"google.golang.org/grpc"
 
-	grpcg "github.com/cloudwego/kitex-benchmark/codec/protobuf/grpc_gen"
-	"github.com/cloudwego/kitex-benchmark/perf"
-	"github.com/cloudwego/kitex-benchmark/runner"
+	grpcg "github.com/bbbearxyz/kitex-benchmark/codec/protobuf/grpc_gen"
+	"github.com/bbbearxyz/kitex-benchmark/perf"
+	"github.com/bbbearxyz/kitex-benchmark/runner"
 )
 
 const (
@@ -39,14 +40,21 @@ type server struct {
 	grpcg.UnimplementedEchoServer
 }
 
-func (s *server) Echo(ctx context.Context, req *grpcg.Request) (*grpcg.Response, error) {
-	resp := runner.ProcessRequest(recorder, req.Action, req.Msg)
+func (s *server) Send(ctx context.Context, req *grpcg.Request) (*grpcg.Response, error) {
+	time.Sleep(time.Duration(req.Time) * time.Millisecond)
+	// 正常只需要返回一个空的msg
+	resp := runner.ProcessRequest(recorder, req.Action, "")
 
 	return &grpcg.Response{
 		Msg:    resp.Msg,
 		Action: resp.Action,
 	}, nil
 }
+
+func (s *server) StreamTest(stream grpcg.Echo_StreamTestServer) (err error) {
+	return nil
+}
+
 
 func main() {
 	// start pprof server

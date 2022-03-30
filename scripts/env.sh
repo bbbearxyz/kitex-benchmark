@@ -34,9 +34,11 @@ GOROOT=$GOROOT
 USER=$(whoami)
 REPORT=${REPORT:-"$(date +%F-%H-%M)"}
 n=5000000
-body=(1024)
-concurrent=(100 200 400 600 800 1000)
+body=(1024 2048)
+concurrent=(100 200 400 600)
 sleep=0
+field=(1 5 10)
+latency=(0 1 10)
 
 nice_cmd=''
 tee_cmd="tee -a output/${REPORT}.log"
@@ -54,5 +56,5 @@ cmd_client="${nice_cmd} ${ccpu_cmd}"
 output_dir=$CURDIR/../output
 pb_dir=$CURDIR/../protobuf
 thrift_dir=$CURDIR/../thrift
-grpc_dir=$CURDIR/../grpc
+grpc_dir=$CURDIR/../protobuf
 

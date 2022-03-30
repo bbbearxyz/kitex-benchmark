@@ -21,13 +21,14 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"time"
 
 	"github.com/cloudwego/kitex/server"
 
-	"github.com/cloudwego/kitex-benchmark/codec/protobuf/kitex_gen/echo"
-	echosvr "github.com/cloudwego/kitex-benchmark/codec/protobuf/kitex_gen/echo/echo"
-	"github.com/cloudwego/kitex-benchmark/perf"
-	"github.com/cloudwego/kitex-benchmark/runner"
+	"github.com/bbbearxyz/kitex-benchmark/codec/protobuf/kitex_gen/echo"
+	echosvr "github.com/bbbearxyz/kitex-benchmark/codec/protobuf/kitex_gen/echo/echo"
+	"github.com/bbbearxyz/kitex-benchmark/perf"
+	"github.com/bbbearxyz/kitex-benchmark/runner"
 )
 
 const (
@@ -40,13 +41,18 @@ var recorder = perf.NewRecorder("KITEX-MUX@Server")
 type EchoImpl struct{}
 
 // Echo implements the EchoImpl interface.
-func (s *EchoImpl) Echo(ctx context.Context, req *echo.Request) (*echo.Response, error) {
-	resp := runner.ProcessRequest(recorder, req.Action, req.Msg)
+func (s *EchoImpl) Send(ctx context.Context, req *echo.Request) (*echo.Response, error) {
+	time.Sleep(time.Duration(req.Time) * time.Millisecond)
+	resp := runner.ProcessRequest(recorder, req.Action, "")
 
 	return &echo.Response{
 		Action: resp.Action,
 		Msg:    resp.Msg,
 	}, nil
+}
+
+func (s *EchoImpl) StreamTest(stream echo.Echo_StreamTestServer) (err error) {
+	return nil
 }
 
 func main() {
