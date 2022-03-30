@@ -56,16 +56,17 @@ type Response struct {
 }
 
 func initFlags() {
-	flag.StringVar(&address, "addr", "", "client call address")
+	flag.StringVar(&address, "addr", "127.0.0.1:8000", "client call address")
 	flag.IntVar(&echoSize, "b", 1024, "echo size once")
 	flag.IntVar(&concurrent, "c", 1, "call concurrent")
 	flag.Int64Var(&total, "n", 1, "call total nums")
 	flag.IntVar(&poolSize, "pool", 10, "conn poll size")
 	flag.IntVar(&sleepTime, "sleep", 0, "sleep time for every request handler")
-	//增加两个字段 field latency
+	// 增加两个字段 field latency
 	// field是指pb字段个数 latency指server手动增加的延迟
 	flag.Int64Var(&field, "field", 1, "pb field number")
 	flag.Int64Var(&latency, "latency", 0, "latency in server")
+	flag.Parse()
 }
 
 func GetRandomString(l int) string {
@@ -81,7 +82,7 @@ func GetRandomString(l int) string {
 
 func Main(name string, newer ClientNewer) {
 	initFlags()
-
+	println(address)
 	// start pprof server
 	go func() {
 		err := perf.ServeMonitor(":18888")

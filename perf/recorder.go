@@ -22,8 +22,8 @@ import (
 	"log"
 	"sync"
 
-	"github.com/cloudwego/kitex-benchmark/perf/cpu"
-	"github.com/cloudwego/kitex-benchmark/perf/mem"
+	"github.com/bbbearxyz/kitex-benchmark/perf/cpu"
+	"github.com/bbbearxyz/kitex-benchmark/perf/mem"
 )
 
 type Recorder struct {
