@@ -7,7 +7,11 @@ source $CURDIR/env.sh
 echo "Check finished."
 
 repo=("grpc" "kitex" "kitex-mux")
+<<<<<<< HEAD
+ports=(8000 8001 8002)
+=======
 ports=(8000 8006)
+>>>>>>> ed3e182060793ba474ffe0baecd415ab4945b115
 
 echo "Building grpc services by exec build_grpc.sh..."
 source $CURDIR/build_grpc.sh

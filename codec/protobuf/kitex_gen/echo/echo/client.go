@@ -4,7 +4,7 @@ package echo
 
 import (
 	"context"
-	"github.com/cloudwego/kitex-benchmark/codec/protobuf/kitex_gen/echo"
+	"github.com/bbbearxyz/kitex-benchmark/codec/protobuf/kitex_gen/echo"
 	"github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/client/callopt"
 	"github.com/cloudwego/kitex/pkg/streaming"

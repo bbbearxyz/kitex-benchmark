@@ -17,7 +17,7 @@
 package main
 
 import (
-	"github.com/cloudwego/kitex-benchmark/runner"
+	"github.com/bbbearxyz/kitex-benchmark/runner"
 )
 
 // main is use for routing.

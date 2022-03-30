@@ -24,7 +24,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/cloudwego/kitex-benchmark/perf"
+	"github.com/bbbearxyz/kitex-benchmark/perf"
 )
 
 var (

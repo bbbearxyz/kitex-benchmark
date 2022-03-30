@@ -4,4 +4,4 @@ protoc --go_out=./grpc_gen --go-grpc_out=./grpc_gen --go_opt=paths=source_relati
 
 # kitex-gen
 rm -rf ./kitex_gen && mkdir ./kitex_gen
-kitex -type protobuf -module github.com/cloudwego/kitex-benchmark ./echo-kitex.proto
+kitex -type protobuf -module github.com/bbbearxyz/kitex-benchmark ./echo-kitex.proto

@@ -5,7 +5,7 @@ package echo
 import (
 	"context"
 	"fmt"
-	"github.com/cloudwego/kitex-benchmark/codec/protobuf/kitex_gen/echo"
+	"github.com/bbbearxyz/kitex-benchmark/codec/protobuf/kitex_gen/echo"
 	"github.com/cloudwego/kitex/client"
 	kitex "github.com/cloudwego/kitex/pkg/serviceinfo"
 	"github.com/cloudwego/kitex/pkg/streaming"

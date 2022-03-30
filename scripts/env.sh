@@ -56,5 +56,5 @@ cmd_client="${nice_cmd} ${ccpu_cmd}"
 output_dir=$CURDIR/../output
 pb_dir=$CURDIR/../protobuf
 thrift_dir=$CURDIR/../thrift
-grpc_dir=$CURDIR/../grpc
+grpc_dir=$CURDIR/../protobuf
 

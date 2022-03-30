@@ -25,9 +25,9 @@ import (
 
 	"google.golang.org/grpc"
 
-	grpcg "github.com/cloudwego/kitex-benchmark/codec/protobuf/grpc_gen"
-	"github.com/cloudwego/kitex-benchmark/perf"
-	"github.com/cloudwego/kitex-benchmark/runner"
+	grpcg "github.com/bbbearxyz/kitex-benchmark/codec/protobuf/grpc_gen"
+	"github.com/bbbearxyz/kitex-benchmark/perf"
+	"github.com/bbbearxyz/kitex-benchmark/runner"
 )
 
 const (
@@ -50,6 +50,11 @@ func (s *server) Send(ctx context.Context, req *grpcg.Request) (*grpcg.Response,
 		Action: resp.Action,
 	}, nil
 }
+
+func (s *server) StreamTest(stream grpcg.Echo_StreamTestServer) (err error) {
+	return nil
+}
+
 
 func main() {
 	// start pprof server

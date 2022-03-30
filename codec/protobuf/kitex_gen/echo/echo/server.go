@@ -2,7 +2,7 @@
 package echo
 
 import (
-	"github.com/cloudwego/kitex-benchmark/codec/protobuf/kitex_gen/echo"
+	"github.com/bbbearxyz/kitex-benchmark/codec/protobuf/kitex_gen/echo"
 	"github.com/cloudwego/kitex/server"
 )
 

@@ -24,9 +24,9 @@ import (
 	"github.com/cloudwego/kitex/client"
 	"github.com/cloudwego/kitex/pkg/connpool"
 
-	"github.com/cloudwego/kitex-benchmark/codec/protobuf/kitex_gen/echo"
-	echosvr "github.com/cloudwego/kitex-benchmark/codec/protobuf/kitex_gen/echo/echo"
-	"github.com/cloudwego/kitex-benchmark/runner"
+	"github.com/bbbearxyz/kitex-benchmark/codec/protobuf/kitex_gen/echo"
+	echosvr "github.com/bbbearxyz/kitex-benchmark/codec/protobuf/kitex_gen/echo/echo"
+	"github.com/bbbearxyz/kitex-benchmark/runner"
 )
 
 func NewPBKiteXClient(opt *runner.Options) runner.Client {
