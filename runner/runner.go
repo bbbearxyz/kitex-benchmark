@@ -68,15 +68,32 @@ func (r *Runner) Warmup(onceFn RunOnce, concurrent int, total int64) {
 	r.benching(onceFn, concurrent, total)
 }
 
+func (r *Runner) StreamingWarmup(onceFn RunOnce, total int64) {
+	r.benching(onceFn, 1, total)
+}
+
 // 并发测试
-func (r *Runner) Run(title string, onceFn RunOnce, concurrent int, total int64, echoSize, sleepTime int) {
+func (r *Runner) Run(title string, onceFn RunOnce, concurrent int, total int64, echoSize, sleepTime int, field, latency int64) {
 	logInfo(
-		"%s start benching [%s], concurrent: %d, total: %d, sleep: %d",
-		"["+title+"]", time.Now().String(), concurrent, total, sleepTime,
+		"%s start benching [%s], concurrent: %d, total: %d, sleep: %d, field: %d, latency: %d",
+		"["+title+"]", time.Now().String(), concurrent, total, sleepTime, field, latency,
 	)
 
 	start := r.timer.Now()
 	r.benching(onceFn, concurrent, total)
 	stop := r.timer.Now()
 	r.counter.Report(title, stop-start, concurrent, total, echoSize)
+}
+
+
+// 流式测试
+func (r *Runner) RunStream(title string, onceFn RunOnce, total int64) {
+	logInfo(
+		"use single thread to test stream, %s start benching [%s], total: %d",
+		"["+title+"]", time.Now().String(), total,
+	)
+	start := r.timer.Now()
+	r.benching(onceFn, 1, total)
+	stop := r.timer.Now()
+	r.counter.Report(title, stop-start, 1, total, 1024 * 1024 * 1024)
 }

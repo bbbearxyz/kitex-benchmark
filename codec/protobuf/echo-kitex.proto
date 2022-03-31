@@ -21,8 +21,8 @@ message Request {
 
 message Response {
     string Action = 1;
-    string msg = 2;
-    bool isEnd = 3;
+    string Msg = 2;
+    bool IsEnd = 3;
 }
 
 //----------------------service-------------------

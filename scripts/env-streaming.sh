@@ -33,12 +33,7 @@ GOROOT=$GOROOT
 
 USER=$(whoami)
 REPORT=${REPORT:-"$(date +%F-%H-%M)"}
-n=5000000
-body=(256 512 1024 16384 65536 262144 1048576 4194304)
-concurrent=(100 200 400 600 1000)
-sleep=0
-field=(1 5 10)
-latency=(0 1 2 10 100 500 1000 5000 10000)
+n=100
 
 nice_cmd=''
 tee_cmd="tee -a output/${REPORT}.log"

@@ -51,6 +51,20 @@ func (s *EchoImpl) Send(ctx context.Context, req *echo.Request) (*echo.Response,
 	}, nil
 }
 
+//func (s *EchoImpl) StreamTest(stream echo.Echo_StreamTestServer) (err error) {
+//	round := 1 * 1024 / 10 + 1
+//	for i := 0; i < round; i ++ {
+//		if i == round - 1 {
+//			//stream.Send(&echo.Response{Msg: "1234", : true})
+//			break
+//		}
+//		stream.Send(&proto.MessageResponse{ResponseSomething: data, IsEnd: false})
+//		println(i)
+//	}
+//	stream.Recv()
+//	return nil
+//}
+
 func (s *EchoImpl) StreamTest(stream echo.Echo_StreamTestServer) (err error) {
 	return nil
 }

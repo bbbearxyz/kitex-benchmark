@@ -6,8 +6,8 @@ echo "Checking whether the environment meets the requirements ..."
 source $CURDIR/env.sh
 echo "Check finished."
 
-repo=("grpc" "kitex" "kitex-mux")
-ports=(8000 8001 8002)
+repo=("grpc" "grpc-tracer")
+ports=(8000, 8001)
 
 echo "Building grpc services by exec build_grpc.sh..."
 source $CURDIR/build_grpc.sh
@@ -28,7 +28,7 @@ for b in ${body[@]}; do
 
           # run client
           echo "Client [$rp] running with [$cmd_client]"
-          $cmd_client $output_dir/bin/${rp}_bencher -addr="$addr" -b=$b -c=$c -n=$n --sleep=$sleep -field=$d -latency=$e | $tee_cmd
+          $cmd_client $output_dir/bin/${rp}_bencher -addr="$addr" -b=$b -c=$c -n=$n --sleep=$sleep -field=$d -latency=$e -isStream=0 | $tee_cmd
 
           # stop server
           pid=$(ps -ef | grep ${rp}_reciever | grep -v grep | awk '{print $2}')

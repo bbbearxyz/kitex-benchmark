@@ -2,7 +2,7 @@
 set -e
 CURDIR=$(cd $(dirname $0); pwd)
 
-repo=("grpc" "kitex")
+repo=("grpc" "grpc-tracer")
 
 # build
 source $CURDIR/build_grpc.sh
