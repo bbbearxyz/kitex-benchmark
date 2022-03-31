@@ -36,6 +36,7 @@ var (
 	sleepTime  int
 	field	   int64
 	latency    int64
+	isStream   int64
 )
 
 type Options struct {
@@ -47,25 +48,27 @@ type Options struct {
 type ClientNewer func(opt *Options) Client
 
 type Client interface {
-	Echo(action, msg string, field, latency, payload int64) (err error)
+	Echo(action, msg string, field, latency, payload, isStream int64) (err error)
 }
 
 type Response struct {
 	Action string
 	Msg    string
+	// IsEnd  bool
 }
 
 func initFlags() {
 	flag.StringVar(&address, "addr", "127.0.0.1:8000", "client call address")
 	flag.IntVar(&echoSize, "b", 1024, "echo size once")
 	flag.IntVar(&concurrent, "c", 1, "call concurrent")
-	flag.Int64Var(&total, "n", 1, "call total nums")
+	flag.Int64Var(&total, "n", 10, "call total nums")
 	flag.IntVar(&poolSize, "pool", 10, "conn poll size")
 	flag.IntVar(&sleepTime, "sleep", 0, "sleep time for every request handler")
 	// 增加两个字段 field latency
 	// field是指pb字段个数 latency指server手动增加的延迟
 	flag.Int64Var(&field, "field", 1, "pb field number")
 	flag.Int64Var(&latency, "latency", 0, "latency in server")
+	flag.Int64Var(&isStream, "isStream", 0, "is stream or not")
 	flag.Parse()
 }
 
@@ -82,7 +85,6 @@ func GetRandomString(l int) string {
 
 func Main(name string, newer ClientNewer) {
 	initFlags()
-	println(address)
 	// start pprof server
 	go func() {
 		err := perf.ServeMonitor(":18888")
@@ -101,7 +103,12 @@ func Main(name string, newer ClientNewer) {
 	}
 	cli := newer(opt)
 	// 随机生成字符
-	payload := GetRandomString(echoSize)
+	payload := ""
+	if isStream == 1 {
+		payload = GetRandomString(256)
+	} else {
+		payload = GetRandomString(echoSize)
+	}
 
 	action := EchoAction
 	if sleepTime > 0 {
@@ -109,24 +116,36 @@ func Main(name string, newer ClientNewer) {
 		st := strconv.Itoa(sleepTime)
 		payload = fmt.Sprintf("%s,%s", st, payload[len(st)+1:])
 	}
-	handler := func() error { return cli.Echo(action, payload, field, latency, int64(echoSize)) }
+	handler := func() error { return cli.Echo(action, payload, field, latency, int64(echoSize), isStream) }
 
 	// === warming ===
-	r.Warmup(handler, concurrent, 100*1000)
+	if isStream == 1 {
+		r.StreamingWarmup(handler, 1)
+	} else {
+		r.Warmup(handler, concurrent, 100*1000)
+	}
 
 	// === beginning ===
-	if err := cli.Echo(BeginAction, "", 0, 0, 0); err != nil {
+	if err := cli.Echo(BeginAction, "", 0, 0, 0, 0); err != nil {
 		log.Fatalf("beginning server failed: %v", err)
 	}
 	recorder := perf.NewRecorder(fmt.Sprintf("%s@Client", name))
 	recorder.Begin()
 
+	// we have two choices
+	// if stream 不并发跑
+	// if not stream 并发跑
 	// === benching ===
-	r.Run(name, handler, concurrent, total, echoSize, sleepTime)
+	if isStream == 1 {
+		r.RunStream(name, handler, total)
+	} else {
+		r.Run(name, handler, concurrent, total, echoSize, sleepTime, field, latency)
+	}
+
 
 	// == ending ===
 	recorder.End()
-	if err := cli.Echo(EndAction, "", 0, 0, 0); err != nil {
+	if err := cli.Echo(EndAction, "", 0, 0, 0, 0); err != nil {
 		log.Fatalf("ending server failed: %v", err)
 	}
 

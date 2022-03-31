@@ -19,6 +19,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/bbbearxyz/kitex-benchmark/runner"
 	"log"
 	"net"
 	"time"
@@ -28,7 +29,6 @@ import (
 	"github.com/bbbearxyz/kitex-benchmark/codec/protobuf/kitex_gen/echo"
 	echosvr "github.com/bbbearxyz/kitex-benchmark/codec/protobuf/kitex_gen/echo/echo"
 	"github.com/bbbearxyz/kitex-benchmark/perf"
-	"github.com/bbbearxyz/kitex-benchmark/runner"
 )
 
 const (
