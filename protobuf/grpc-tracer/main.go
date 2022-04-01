@@ -41,7 +41,7 @@ const (
 )
 
 var data string
-var recorder = perf.NewRecorder("GRPC@Server")
+var recorder = perf.NewRecorder("GRPC-TRACER@Server")
 
 type server struct {
 	grpcg.UnimplementedEchoServer
