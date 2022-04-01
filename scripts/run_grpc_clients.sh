@@ -8,7 +8,7 @@ repo=("grpc" "grpc-tracer")
 ports=(8000 8001)
 
 # 默认为127.0.0.1
-ip=${IP:-"135.155.72.129"}
+ip=${IP:-"10.222.1.130"}
 
 # build
 source $CURDIR/build_grpc.sh

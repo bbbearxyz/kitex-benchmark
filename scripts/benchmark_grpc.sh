@@ -7,7 +7,7 @@ source $CURDIR/env.sh
 echo "Check finished."
 
 repo=("grpc" "grpc-tracer")
-ports=(8000, 8001)
+ports=(8000 8001)
 
 echo "Building grpc services by exec build_grpc.sh..."
 source $CURDIR/build_grpc.sh

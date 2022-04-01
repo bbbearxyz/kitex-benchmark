@@ -75,8 +75,8 @@ func (r *Runner) StreamingWarmup(onceFn RunOnce, total int64) {
 // 并发测试
 func (r *Runner) Run(title string, onceFn RunOnce, concurrent int, total int64, echoSize, sleepTime int, field, latency int64) {
 	logInfo(
-		"%s start benching [%s], concurrent: %d, total: %d, sleep: %d, field: %d, latency: %d",
-		"["+title+"]", time.Now().String(), concurrent, total, sleepTime, field, latency,
+		"%s start benching [%s], concurrent: %d, total: %d, sleep: %d, field: %d, latency: %d, size: %d",
+		"["+title+"]", time.Now().String(), concurrent, total, sleepTime, field, latency, echoSize,
 	)
 
 	start := r.timer.Now()
