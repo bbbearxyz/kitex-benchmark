@@ -7,7 +7,7 @@ source $CURDIR/env-streaming.sh
 echo "Check finished."
 
 repo=("grpc" "tcp")
-ports=(8000, 8003)
+ports=(8000 8003)
 
 echo "Building grpc services by exec build_grpc.sh..."
 source $CURDIR/build_grpc.sh
