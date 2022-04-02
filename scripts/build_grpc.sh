@@ -21,3 +21,5 @@ $GOEXEC build -v -o $output_dir/bin/grpc_bencher $grpc_dir/grpc/client
 $GOEXEC build -v -o $output_dir/bin/grpc_reciever $grpc_dir/grpc
 $GOEXEC build -v -o $output_dir/bin/grpc-tracer_bencher $grpc_dir/grpc-tracer/client
 $GOEXEC build -v -o $output_dir/bin/grpc-tracer_reciever $grpc_dir/grpc-tracer
+$GOEXEC build -v -o $output_dir/bin/tcp_bencher $grpc_dir/tcp/client
+$GOEXEC build -v -o $output_dir/bin/tcp_reciever $grpc_dir/tcp
