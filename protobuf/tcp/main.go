@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"github.com/bbbearxyz/kitex-benchmark/perf"
 	"github.com/bbbearxyz/kitex-benchmark/runner"
-	"github.com/cloudwego/kitex/pkg/utils"
 	"log"
 	"net"
 )
@@ -29,7 +28,7 @@ const (
 	port = 8003
 )
 
-var data string
+var data []byte
 var recorder = perf.NewRecorder("TCP@Server")
 
 func StreamTest(c net.Conn) error {
@@ -39,10 +38,10 @@ func StreamTest(c net.Conn) error {
 	round := 1 * 1024 / 10 + 1
 	for i := 0; i < round; i ++ {
 		if i == round - 1 {
-			c.Write(utils.StringToSliceByte(data[0: 4 * 1024 * 1024]))
+			c.Write(data[0: 4 * 1024 * 1024])
 			break
 		}
-		c.Write(utils.StringToSliceByte(data))
+		c.Write(data)
 	}
 	c.Close()
 	return nil
@@ -50,7 +49,7 @@ func StreamTest(c net.Conn) error {
 
 func main() {
 	// 产生10mb的数据为了测试流的性能
-	data = runner.GetRandomString(10 * 1024 * 1024)
+	data = []byte(runner.GetRandomString(10 * 1024 * 1024))
 
 	// start pprof server
 	go func() {
