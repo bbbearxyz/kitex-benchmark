@@ -3,10 +3,10 @@ set -e
 CURDIR=$(cd $(dirname $0); pwd)
 
 echo "Checking whether the environment meets the requirements ..."
-source $CURDIR/env.sh
+source $CURDIR/env-streaming.sh
 echo "Check finished."
 
-repo=("grpc" "grpc-tracer")
+repo=("grpc" "tcp")
 
 # build
 echo "Building grpc services by exec build_grpc.sh..."

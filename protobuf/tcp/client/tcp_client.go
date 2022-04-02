@@ -53,12 +53,13 @@ func (cli *tcpClient) Echo(action, msg string, field, latency, payload, isStream
 		if action != runner.EchoAction {
 			return nil
 		}
-		println(cli.address)
 		conn, _ := net.Dial("tcp", cli.address)
 		buf := make([]byte, 10 * 1024)
 		conn.Write([]byte(msg))
-		for i := 0; i < 1024 / 10 + 1; i ++ {
-			conn.Read(buf)
+		num := 0
+		for num != 1024 * 1024 * 1024 {
+			delta, _ := conn.Read(buf)
+			num += delta
 		}
 		conn.Close()
 		return nil
