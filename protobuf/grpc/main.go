@@ -57,10 +57,10 @@ func (s *server) StreamTest(stream grpcg.Echo_StreamTestServer) error {
 	round := 1 * 1024 / 10 + 1
 	for i := 0; i < round; i ++ {
 		if i == round - 1 {
-			stream.Send(&grpcg.Response{Msg: data[0: 4 * 1024 * 1024], IsEnd: false})
+			stream.Send(&grpcg.Response{Msg: data[0: 4 * 1024 * 1024], IsEnd: true})
 			break
 		}
-		stream.Send(&grpcg.Response{Msg: data, IsEnd: true})
+		stream.Send(&grpcg.Response{Msg: data, IsEnd: false})
 	}
 	stream.Recv()
 	return nil

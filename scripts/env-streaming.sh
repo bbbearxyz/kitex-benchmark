@@ -33,7 +33,7 @@ GOROOT=$GOROOT
 
 USER=$(whoami)
 REPORT=${REPORT:-"$(date +%F-%H-%M)"}
-n=100
+n=10
 
 nice_cmd=''
 tee_cmd="tee -a output/${REPORT}.log"
