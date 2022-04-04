@@ -92,6 +92,7 @@ func (cli *pbGrpcClient) Echo(action, msg string, field, latency, payload, isStr
 	var reply *grpcg.Response
 	if isStream == 1 {
 		stream, _ := pbcli.StreamTest(ctx)
+		req.Length = payload
 		stream.Send(req)
 		for true {
 			res, err := stream.Recv()

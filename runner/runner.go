@@ -87,13 +87,13 @@ func (r *Runner) Run(title string, onceFn RunOnce, concurrent int, total int64, 
 
 
 // 流式测试
-func (r *Runner) RunStream(title string, onceFn RunOnce, total int64) {
+func (r *Runner) RunStream(title string, onceFn RunOnce, total int64, echoSize int) {
 	logInfo(
-		"use single thread to test stream, %s start benching [%s], total: %d",
-		"["+title+"]", time.Now().String(), total,
+		"use single thread to test stream, %s start benching [%s], total: %d, size: %d",
+		"["+title+"]", time.Now().String(), total, echoSize,
 	)
 	start := r.timer.Now()
 	r.benching(onceFn, 1, total)
 	stop := r.timer.Now()
-	r.counter.Report(title, stop-start, 1, total, 1024 * 1024 * 1024)
+	r.counter.Report(title, stop-start, 1, total, echoSize)
 }
