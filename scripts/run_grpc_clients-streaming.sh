@@ -14,13 +14,15 @@ ip=${IP:-"10.222.1.129"}
 source $CURDIR/build_grpc.sh
 
 # benchmark
-for ((i = 0; i < ${#repo[@]}; i++)); do
-  rp=${repo[i]}
-  addr="${ip}:${ports[i]}"
+for b in ${body[@]}; do
+  for ((i = 0; i < ${#repo[@]}; i++)); do
+    rp=${repo[i]}
+    addr="${ip}:${ports[i]}"
 
-  # run client
-  echo "Client [$rp] running with [$taskset_client]"
-  $cmd_client $output_dir/bin/${rp}_bencher -addr="$addr" -n=$n -isStream=1 | $tee_cmd
+    # run client
+    echo "Client [$rp] running with [$taskset_client]"
+    $cmd_client $output_dir/bin/${rp}_bencher -addr="$addr" -b=$b -n=$n -isStream=1 | $tee_cmd
+  done
 done
 
 

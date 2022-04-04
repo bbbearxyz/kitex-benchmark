@@ -17,6 +17,7 @@ message Request {
     string field9 = 10;
     string field10 = 11;
     int64 time = 12;
+    int64 length = 13;
 }
 
 message Response {

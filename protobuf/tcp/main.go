@@ -17,6 +17,7 @@
 package main
 
 import (
+	"encoding/binary"
 	"fmt"
 	"github.com/bbbearxyz/kitex-benchmark/perf"
 	"github.com/bbbearxyz/kitex-benchmark/runner"
@@ -35,14 +36,27 @@ func StreamTest(c net.Conn) error {
 	recorder.Begin()
 	buf := make([]byte, 256)
 	c.Read(buf)
+	length, _ := binary.Varint(buf)
 
-	round := 1 * 1024 / 10 + 1
-	for i := 0; i < round; i ++ {
+	// 计算1GB / length的次数
+	round := int64(0)
+	sendDataLength := int64(length)
+	lastDataLength := int64(0)
+
+	if 1024 * 1024 * 1024 % length == 0 {
+		round = 1024 * 1024 * 1024 / length
+		lastDataLength = sendDataLength
+	} else {
+		round = 1024 * 1024 * 1024 / length + 1
+		lastDataLength = 1024 * 1024 * 1024 - (sendDataLength * (round - 1))
+	}
+
+	for i := int64(0); i < round; i ++ {
 		if i == round - 1 {
-			c.Write(data[0: 4 * 1024 * 1024])
+			c.Write(data[0: lastDataLength])
 			break
 		}
-		c.Write(data)
+		c.Write(data[0: sendDataLength])
 	}
 	c.Close()
 	recorder.End()
@@ -51,8 +65,8 @@ func StreamTest(c net.Conn) error {
 }
 
 func main() {
-	// 产生10mb的数据为了测试流的性能
-	data = []byte(runner.GetRandomString(10 * 1024 * 1024))
+	// 产生100mb的数据为了测试流的性能
+	data = []byte(runner.GetRandomString(100 * 1024 * 1024))
 
 	// start pprof server
 	go func() {

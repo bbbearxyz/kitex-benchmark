@@ -59,7 +59,7 @@ type Response struct {
 
 func initFlags() {
 	flag.StringVar(&address, "addr", "127.0.0.1:8003", "client call address")
-	flag.IntVar(&echoSize, "b", 1024, "echo size once")
+	flag.IntVar(&echoSize, "b", 1024 * 1024 * 10, "echo size once")
 	flag.IntVar(&concurrent, "c", 1, "call concurrent")
 	flag.Int64Var(&total, "n", 10, "call total nums")
 	flag.IntVar(&poolSize, "pool", 1, "conn poll size")
@@ -137,7 +137,7 @@ func Main(name string, newer ClientNewer) {
 	// if not stream 并发跑
 	// === benching ===
 	if isStream == 1 {
-		r.RunStream(name, handler, total)
+		r.RunStream(name, handler, total, echoSize)
 	} else {
 		r.Run(name, handler, concurrent, total, echoSize, sleepTime, field, latency)
 	}

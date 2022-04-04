@@ -86,12 +86,13 @@ func (cli *pbGrpcClient) Echo(action, msg string, field, latency, payload, isStr
 	}
 
 	pbcli := cli.connpool.Get().(grpcg.EchoClient)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 	var err error
 	var reply *grpcg.Response
 	if isStream == 1 {
 		stream, _ := pbcli.StreamTest(ctx)
+		req.Length = payload
 		stream.Send(req)
 		for true {
 			res, err := stream.Recv()

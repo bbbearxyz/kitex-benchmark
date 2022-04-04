@@ -17,6 +17,7 @@
 package main
 
 import (
+	"encoding/binary"
 	"github.com/bbbearxyz/kitex-benchmark/runner"
 	"net"
 	"sync"
@@ -54,8 +55,13 @@ func (cli *tcpClient) Echo(action, msg string, field, latency, payload, isStream
 			return nil
 		}
 		conn, _ := net.Dial("tcp", cli.address)
-		buf := make([]byte, 10 * 1024)
-		conn.Write([]byte(msg))
+
+		// 把tcp的前8个字节设置为每次streaming传输的大小
+		sendBytes := []byte(msg)
+		binary.PutVarint(sendBytes, payload)
+		conn.Write(sendBytes)
+
+		buf := make([]byte, payload)
 		num := 0
 		for num != 1024 * 1024 * 1024 {
 			delta, _ := conn.Read(buf)

@@ -59,15 +59,28 @@ func (s *server) Send(ctx context.Context, req *grpcg.Request) (*grpcg.Response,
 }
 
 func (s *server) StreamTest(stream grpcg.Echo_StreamTestServer) error {
-	round := 1 * 1024 / 10 + 1
-	for i := 0; i < round; i ++ {
+	// 计算1GB / length的次数
+	req, _ := stream.Recv()
+	length := req.Length
+	round := int64(0)
+	sendDataLength := int64(length)
+	lastDataLength := int64(0)
+
+	if 1024 * 1024 * 1024 % length == 0 {
+		round = 1024 * 1024 * 1024 / length
+		lastDataLength = sendDataLength
+	} else {
+		round = 1024 * 1024 * 1024 / length + 1
+		lastDataLength = 1024 * 1024 * 1024 - (sendDataLength * (round - 1))
+	}
+
+	for i := int64(0); i < round; i ++ {
 		if i == round - 1 {
-			stream.Send(&grpcg.Response{Msg: data[0: 4 * 1024 * 1024], IsEnd: false})
+			stream.Send(&grpcg.Response{Msg: data[0: lastDataLength], IsEnd: true})
 			break
 		}
-		stream.Send(&grpcg.Response{Msg: data, IsEnd: true})
+		stream.Send(&grpcg.Response{Msg: data[0: sendDataLength], IsEnd: false})
 	}
-	stream.Recv()
 	return nil
 }
 
