@@ -38,7 +38,7 @@ func NewPBGrpcClient(opt *runner.Options) runner.Client {
 	cli.connpool = runner.NewPool(func() interface{} {
 		// Set up a connection to the server.
 		// 配置参数
-		conn, err := grpc.Dial(opt.Address, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(100 * 1024 * 1024)))
+		conn, err := grpc.Dial(opt.Address, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(200 * 1024 * 1024)))
 		if err != nil {
 			log.Fatalf("did not connect: %v", err)
 		}
