@@ -1,0 +1,1 @@
+docker-compose -f ./zookeeper.yml up -d

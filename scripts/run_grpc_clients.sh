@@ -4,8 +4,8 @@ CURDIR=$(cd $(dirname $0); pwd)
 
 source $CURDIR/env.sh
 
-repo=("grpc" "grpc-tracer")
-ports=(8000 8001)
+repo=("grpc" "kitex" "dubbo")
+ports=(8000 8002 8004)
 
 # 默认为127.0.0.1
 ip=${IP:-"10.222.1.129"}

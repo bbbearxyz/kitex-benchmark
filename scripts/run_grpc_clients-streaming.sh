@@ -4,8 +4,8 @@ CURDIR=$(cd $(dirname $0); pwd)
 
 source $CURDIR/env-streaming.sh
 
-repo=("grpc" "tcp")
-ports=(8000 8003)
+repo=("grpc" "kitex ""tcp" "dubbo")
+ports=(8000 8002 8003 8004)
 
 # 默认为127.0.0.1
 ip=${IP:-"10.222.1.129"}

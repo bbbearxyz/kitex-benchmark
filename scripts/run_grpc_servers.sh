@@ -6,7 +6,7 @@ echo "Checking whether the environment meets the requirements ..."
 source $CURDIR/env.sh
 echo "Check finished."
 
-repo=("grpc" "grpc-tracer")
+repo=("grpc" "kitex" "dubbo")
 
 # build
 echo "Building grpc services by exec build_grpc.sh..."

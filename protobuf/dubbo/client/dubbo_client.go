@@ -18,47 +18,58 @@ package main
 
 import (
 	"context"
+	"dubbo.apache.org/dubbo-go/v3/config"
+	dubbo "github.com/bbbearxyz/kitex-benchmark/codec/protobuf/dubbo_gen"
+	grpcg "github.com/bbbearxyz/kitex-benchmark/codec/protobuf/grpc_gen"
 	"sync"
 	"time"
-
-	"github.com/cloudwego/kitex/client"
-	"github.com/cloudwego/kitex/pkg/connpool"
-
-	"github.com/bbbearxyz/kitex-benchmark/codec/protobuf/kitex_gen/echo"
-	echosvr "github.com/bbbearxyz/kitex-benchmark/codec/protobuf/kitex_gen/echo/echo"
 	"github.com/bbbearxyz/kitex-benchmark/runner"
 )
 
-func NewPBKiteXClient(opt *runner.Options) runner.Client {
-	cli := &pbKitexClient{}
-	cli.client = echosvr.MustNewClient("test.echo.kitex",
-		client.WithHostPorts(opt.Address),
-		client.WithLongConnection(
-			connpool.IdleConfig{MaxIdlePerAddress: 1000, MaxIdleGlobal: 1000, MaxIdleTimeout: time.Minute}),
-	)
+
+func NewPBDubboClient(opt *runner.Options) runner.Client {
+	cli := &pbDubboClient{}
+	cli.client = new(dubbo.EchoClientImpl)
+
+	config.SetConsumerService(cli.client)
+	// init rootConfig with config api
+	rc := config.NewRootConfigBuilder().
+		SetConsumer(config.NewConsumerConfigBuilder().
+			AddReference("EchoClient", config.NewReferenceConfigBuilder().
+				SetProtocol("tri").
+				Build()).
+			Build()).
+		AddRegistry("zookeeper", config.NewRegistryConfigWithProtocolDefaultPort("zookeeper")).
+		Build()
+
+	// start dubbo-go framework with configuration
+	if err := config.Load(config.WithRootConfig(rc)); err != nil{
+		panic(err)
+	}
+
 	cli.reqPool = &sync.Pool{
 		New: func() interface{} {
-			return &echo.Request{}
+			return &grpcg.Request{}
 		},
 	}
 	return cli
 }
 
-type pbKitexClient struct {
-	client  echosvr.Client
-	reqPool *sync.Pool
+type pbDubboClient struct {
+	reqPool  *sync.Pool
+	client   *dubbo.EchoClientImpl
 }
 
-func (cli *pbKitexClient) Echo(action, msg string, field, latency, payload, isStream int64) (err error) {
+func (cli *pbDubboClient) Echo(action, msg string, field, latency, payload, isStream int64) error {
 	ctx := context.Background()
-	req := cli.reqPool.Get().(*echo.Request)
+	req := cli.reqPool.Get().(*dubbo.Request)
 	defer cli.reqPool.Put(req)
 
 	req.Action = action
 	req.Time = latency
 
-	if req.Action == runner.EchoAction {
-		if field == 1 {
+	if req.Action == runner.EchoAction{
+		if field == 1 || isStream == 1 {
 			req.Field1 = msg
 		} else if field == 5 {
 			averageLen := (payload) / field
@@ -85,8 +96,8 @@ func (cli *pbKitexClient) Echo(action, msg string, field, latency, payload, isSt
 	pbcli := cli.client
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-
-	var reply *echo.Response
+	var err error
+	var reply *dubbo.Response
 	if isStream == 1 {
 		stream, _ := pbcli.StreamTest(ctx)
 		req.Length = payload
@@ -100,7 +111,7 @@ func (cli *pbKitexClient) Echo(action, msg string, field, latency, payload, isSt
 				break
 			}
 		}
-		stream.Close()
+		stream.CloseSend()
 	} else {
 		reply, err = pbcli.Send(ctx, req)
 
