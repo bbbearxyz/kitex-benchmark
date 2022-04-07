@@ -58,7 +58,7 @@ type Response struct {
 }
 
 func initFlags() {
-	flag.StringVar(&address, "addr", "127.0.0.1:8003", "client call address")
+	flag.StringVar(&address, "addr", "127.0.0.1:8002", "client call address")
 	flag.IntVar(&echoSize, "b", 1024 * 1024 * 10, "echo size once")
 	flag.IntVar(&concurrent, "c", 1, "call concurrent")
 	flag.Int64Var(&total, "n", 10, "call total nums")

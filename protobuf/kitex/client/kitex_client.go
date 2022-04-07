@@ -49,7 +49,7 @@ type pbKitexClient struct {
 	reqPool *sync.Pool
 }
 
-func (cli *pbKitexClient) Echo(action, msg string, field, latency, payload int64) error {
+func (cli *pbKitexClient) Echo(action, msg string, field, latency, payload, isStream int64) (err error) {
 	ctx := context.Background()
 	req := cli.reqPool.Get().(*echo.Request)
 	defer cli.reqPool.Put(req)
@@ -82,9 +82,31 @@ func (cli *pbKitexClient) Echo(action, msg string, field, latency, payload int64
 		}
 	}
 
-	reply, err := cli.client.Send(ctx, req)
-	if reply != nil {
-		runner.ProcessResponse(reply.Action, reply.Msg)
+	pbcli := cli.client
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	var reply *echo.Response
+	if isStream == 1 {
+		stream, _ := pbcli.StreamTest(ctx)
+		req.Length = payload
+		stream.Send(req)
+		for true {
+			res, err := stream.Recv()
+			if err != nil {
+				println(err.Error())
+			}
+			if res.IsEnd {
+				break
+			}
+		}
+		stream.Close()
+	} else {
+		reply, err = pbcli.Send(ctx, req)
+
+		if reply != nil {
+			runner.ProcessResponse(reply.Action, reply.Msg)
+		}
 	}
 	return err
 }

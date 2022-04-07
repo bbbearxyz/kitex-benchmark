@@ -18,41 +18,38 @@ package main
 
 import (
 	"context"
+	"dubbo.apache.org/dubbo-go/v3/config"
 	"fmt"
-	"log"
-	"net"
+	dubbo "github.com/bbbearxyz/kitex-benchmark/codec/protobuf/dubbo_gen"
 	"time"
 
-	"github.com/cloudwego/kitex/server"
-
-	"github.com/bbbearxyz/kitex-benchmark/codec/protobuf/kitex_gen/echo"
-	echosvr "github.com/bbbearxyz/kitex-benchmark/codec/protobuf/kitex_gen/echo/echo"
 	"github.com/bbbearxyz/kitex-benchmark/perf"
 	"github.com/bbbearxyz/kitex-benchmark/runner"
 )
 
 const (
-	port = 8002
+	port = 8004
 )
 
 var data string
-var recorder = perf.NewRecorder("KITEX@Server")
+var recorder = perf.NewRecorder("DUBBO@Server")
 
-// EchoImpl implements the last service interface defined in the IDL.
-type EchoImpl struct{}
+type server struct {
+	dubbo.UnimplementedEchoServer
+}
 
-// Echo implements the EchoImpl interface.
-func (s *EchoImpl) Send(ctx context.Context, req *echo.Request) (*echo.Response, error) {
+func (s *server) Send(ctx context.Context, req *dubbo.Request) (*dubbo.Response, error) {
 	time.Sleep(time.Duration(req.Time) * time.Millisecond)
+	// 正常只需要返回一个空的msg
 	resp := runner.ProcessRequest(recorder, req.Action, "")
 
-	return &echo.Response{
-		Action: resp.Action,
+	return &dubbo.Response{
 		Msg:    resp.Msg,
+		Action: resp.Action,
 	}, nil
 }
 
-func (s *EchoImpl) StreamTest(stream echo.Echo_StreamTestServer) (err error) {
+func (s *server) StreamTest(stream dubbo.Echo_StreamTestServer) error {
 	// 计算1GB / length的次数
 	req, _ := stream.Recv()
 	length := req.Length
@@ -70,10 +67,10 @@ func (s *EchoImpl) StreamTest(stream echo.Echo_StreamTestServer) (err error) {
 
 	for i := int64(0); i < round; i ++ {
 		if i == round - 1 {
-			stream.Send(&echo.Response{Msg: data[0: lastDataLength], IsEnd: true})
+			stream.Send(&dubbo.Response{Msg: data[0: lastDataLength], IsEnd: true})
 			break
 		}
-		stream.Send(&echo.Response{Msg: data[0: sendDataLength], IsEnd: false})
+		stream.Send(&dubbo.Response{Msg: data[0: sendDataLength], IsEnd: false})
 	}
 	return nil
 }
@@ -81,16 +78,29 @@ func (s *EchoImpl) StreamTest(stream echo.Echo_StreamTestServer) (err error) {
 func main() {
 	// 产生100mb的数据为了测试流的性能
 	data = runner.GetRandomString(100 * 1024 * 1024)
+
 	// start pprof server
 	go func() {
 		perf.ServeMonitor(fmt.Sprintf(":%d", port+10000))
 	}()
 
-	address := &net.UnixAddr{Net: "tcp", Name: fmt.Sprintf(":%d", port)}
-	svr := echosvr.NewServer(new(EchoImpl), server.WithServiceAddr(address))
+	config.SetProviderService(&server{})
 
-	err := svr.Run()
-	if err != nil {
-		log.Println(err.Error())
+	rc := config.NewRootConfigBuilder().
+		SetProvider(config.NewProviderConfigBuilder().
+			AddService("GreeterProvider", config.NewServiceConfigBuilder().Build()).
+			Build()).
+		AddProtocol("tripleProtocolKey", config.NewProtocolConfigBuilder().
+			SetName("tri").
+			SetPort("20001").
+			Build()).
+		AddRegistry("registryKey", config.NewRegistryConfigWithProtocolDefaultPort("zookeeper")).
+		Build()
+
+	// start dubbo-go framework with configuration
+	if err := config.Load(config.WithRootConfig(rc)); err != nil{
+		panic(err)
 	}
+
+	select {}
 }

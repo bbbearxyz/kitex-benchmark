@@ -18,43 +18,51 @@ package main
 
 import (
 	"context"
-	"log"
+	"dubbo.apache.org/dubbo-go/v3/config"
+	dubbo "github.com/bbbearxyz/kitex-benchmark/codec/protobuf/dubbo_gen"
+	grpcg "github.com/bbbearxyz/kitex-benchmark/codec/protobuf/grpc_gen"
 	"sync"
 	"time"
-
-	"google.golang.org/grpc"
-
-	grpcg "github.com/bbbearxyz/kitex-benchmark/codec/protobuf/grpc_gen"
 	"github.com/bbbearxyz/kitex-benchmark/runner"
 )
 
-func NewPBGrpcClient(opt *runner.Options) runner.Client {
-	cli := &pbGrpcClient{}
+
+func NewPBDubboClient(opt *runner.Options) runner.Client {
+	cli := &pbDubboClient{}
+	cli.client = new(dubbo.EchoClientImpl)
+
+	config.SetConsumerService(cli.client)
+	// init rootConfig with config api
+	rc := config.NewRootConfigBuilder().
+		SetConsumer(config.NewConsumerConfigBuilder().
+			AddReference("EchoClient", config.NewReferenceConfigBuilder().
+				SetProtocol("tri").
+				Build()).
+			Build()).
+		AddRegistry("zookeeper", config.NewRegistryConfigWithProtocolDefaultPort("zookeeper")).
+		Build()
+
+	// start dubbo-go framework with configuration
+	if err := config.Load(config.WithRootConfig(rc)); err != nil{
+		panic(err)
+	}
+
 	cli.reqPool = &sync.Pool{
 		New: func() interface{} {
 			return &grpcg.Request{}
 		},
 	}
-	cli.connpool = runner.NewPool(func() interface{} {
-		// Set up a connection to the server.
-		// 配置参数
-		conn, err := grpc.Dial(opt.Address, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(200 * 1024 * 1024)))
-		if err != nil {
-			log.Fatalf("did not connect: %v", err)
-		}
-		return grpcg.NewEchoClient(conn)
-	}, opt.PoolSize)
 	return cli
 }
 
-type pbGrpcClient struct {
+type pbDubboClient struct {
 	reqPool  *sync.Pool
-	connpool *runner.Pool
+	client   *dubbo.EchoClientImpl
 }
 
-func (cli *pbGrpcClient) Echo(action, msg string, field, latency, payload, isStream int64) error {
+func (cli *pbDubboClient) Echo(action, msg string, field, latency, payload, isStream int64) error {
 	ctx := context.Background()
-	req := cli.reqPool.Get().(*grpcg.Request)
+	req := cli.reqPool.Get().(*dubbo.Request)
 	defer cli.reqPool.Put(req)
 
 	req.Action = action
@@ -85,11 +93,11 @@ func (cli *pbGrpcClient) Echo(action, msg string, field, latency, payload, isStr
 		}
 	}
 
-	pbcli := cli.connpool.Get().(grpcg.EchoClient)
+	pbcli := cli.client
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 	var err error
-	var reply *grpcg.Response
+	var reply *dubbo.Response
 	if isStream == 1 {
 		stream, _ := pbcli.StreamTest(ctx)
 		req.Length = payload
