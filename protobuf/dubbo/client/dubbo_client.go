@@ -20,10 +20,9 @@ import (
 	"context"
 	"dubbo.apache.org/dubbo-go/v3/config"
 	dubbo "github.com/bbbearxyz/kitex-benchmark/codec/protobuf/dubbo_gen"
-	grpcg "github.com/bbbearxyz/kitex-benchmark/codec/protobuf/grpc_gen"
+	"github.com/bbbearxyz/kitex-benchmark/runner"
 	"sync"
 	"time"
-	"github.com/bbbearxyz/kitex-benchmark/runner"
 )
 
 
@@ -32,24 +31,15 @@ func NewPBDubboClient(opt *runner.Options) runner.Client {
 	cli.client = new(dubbo.EchoClientImpl)
 
 	config.SetConsumerService(cli.client)
-	// init rootConfig with config api
-	rc := config.NewRootConfigBuilder().
-		SetConsumer(config.NewConsumerConfigBuilder().
-			AddReference("EchoClient", config.NewReferenceConfigBuilder().
-				SetProtocol("tri").
-				Build()).
-			Build()).
-		AddRegistry("zookeeper", config.NewRegistryConfigWithProtocolDefaultPort("zookeeper")).
-		Build()
 
 	// start dubbo-go framework with configuration
-	if err := config.Load(config.WithRootConfig(rc)); err != nil{
+	if err := config.Load(); err != nil{
 		panic(err)
 	}
 
 	cli.reqPool = &sync.Pool{
 		New: func() interface{} {
-			return &grpcg.Request{}
+			return &dubbo.Request{}
 		},
 	}
 	return cli

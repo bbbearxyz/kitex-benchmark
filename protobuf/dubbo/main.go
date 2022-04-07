@@ -34,11 +34,11 @@ const (
 var data string
 var recorder = perf.NewRecorder("DUBBO@Server")
 
-type server struct {
+type Server struct {
 	dubbo.UnimplementedEchoServer
 }
 
-func (s *server) Send(ctx context.Context, req *dubbo.Request) (*dubbo.Response, error) {
+func (s *Server) Send(ctx context.Context, req *dubbo.Request) (*dubbo.Response, error) {
 	time.Sleep(time.Duration(req.Time) * time.Millisecond)
 	// 正常只需要返回一个空的msg
 	resp := runner.ProcessRequest(recorder, req.Action, "")
@@ -49,7 +49,7 @@ func (s *server) Send(ctx context.Context, req *dubbo.Request) (*dubbo.Response,
 	}, nil
 }
 
-func (s *server) StreamTest(stream dubbo.Echo_StreamTestServer) error {
+func (s *Server) StreamTest(stream dubbo.Echo_StreamTestServer) error {
 	// 计算1GB / length的次数
 	req, _ := stream.Recv()
 	length := req.Length
@@ -84,21 +84,9 @@ func main() {
 		perf.ServeMonitor(fmt.Sprintf(":%d", port+10000))
 	}()
 
-	config.SetProviderService(&server{})
-
-	rc := config.NewRootConfigBuilder().
-		SetProvider(config.NewProviderConfigBuilder().
-			AddService("GreeterProvider", config.NewServiceConfigBuilder().Build()).
-			Build()).
-		AddProtocol("tripleProtocolKey", config.NewProtocolConfigBuilder().
-			SetName("tri").
-			SetPort("20001").
-			Build()).
-		AddRegistry("registryKey", config.NewRegistryConfigWithProtocolDefaultPort("zookeeper")).
-		Build()
-
+	config.SetProviderService(&Server{})
 	// start dubbo-go framework with configuration
-	if err := config.Load(config.WithRootConfig(rc)); err != nil{
+	if err := config.Load(); err != nil{
 		panic(err)
 	}
 
