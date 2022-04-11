@@ -22,5 +22,5 @@ import (
 
 // main is use for routing.
 func main() {
-	runner.Main("TCP", NewPBGrpcClient)
+	runner.Main("TCP-STREAMING", NewPBGrpcClient)
 }

@@ -97,3 +97,15 @@ func (r *Runner) RunStream(title string, onceFn RunOnce, total int64, echoSize i
 	stop := r.timer.Now()
 	r.counter.Report(title, stop-start, 1, total, echoSize)
 }
+
+// 流式TCP CostTest测试
+func (r *Runner) RunTCPCostTest(title string, onceFn RunOnce, total int64, echoSize int) {
+	logInfo(
+		"use single thread to test stream on tcp cost, %s start benching [%s], total: %d, size: %d",
+		"["+title+"]", time.Now().String(), total, echoSize,
+	)
+	start := r.timer.Now()
+	r.benching(onceFn, 1, total)
+	stop := r.timer.Now()
+	r.counter.Report(title, stop-start, 1, total, echoSize)
+}

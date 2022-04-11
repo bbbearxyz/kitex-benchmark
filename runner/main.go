@@ -37,6 +37,7 @@ var (
 	field	   int64
 	latency    int64
 	isStream   int64
+	isTCPCostTest int64
 )
 
 type Options struct {
@@ -48,7 +49,7 @@ type Options struct {
 type ClientNewer func(opt *Options) Client
 
 type Client interface {
-	Echo(action, msg string, field, latency, payload, isStream int64) (err error)
+	Echo(action, msg string, field, latency, payload, isStream, isTCPCostTest int64) (err error)
 }
 
 type Response struct {
@@ -58,7 +59,7 @@ type Response struct {
 }
 
 func initFlags() {
-	flag.StringVar(&address, "addr", "127.0.0.1:8002", "client call address")
+	flag.StringVar(&address, "addr", "127.0.0.1:8000", "client call address")
 	flag.IntVar(&echoSize, "b", 1024 * 1024 * 10, "echo size once")
 	flag.IntVar(&concurrent, "c", 1, "call concurrent")
 	flag.Int64Var(&total, "n", 10, "call total nums")
@@ -68,7 +69,9 @@ func initFlags() {
 	// field是指pb字段个数 latency指server手动增加的延迟
 	flag.Int64Var(&field, "field", 1, "pb field number")
 	flag.Int64Var(&latency, "latency", 0, "latency in server")
-	flag.Int64Var(&isStream, "isStream", 1, "is stream or not")
+	flag.Int64Var(&isStream, "isStream", 0, "is stream or not")
+	// tcp开销测试 具体可以看readme.md
+	flag.Int64Var(&isTCPCostTest, "isTCPCostTest", 0, "is tcp cost test or not")
 	flag.Parse()
 }
 
@@ -104,8 +107,10 @@ func Main(name string, newer ClientNewer) {
 	cli := newer(opt)
 	// 随机生成字符
 	payload := ""
-	if isStream == 1 {
+	if isStream == 1{
 		payload = GetRandomString(256)
+	} else if isTCPCostTest == 1 {
+		payload = GetRandomString(64)
 	} else {
 		payload = GetRandomString(echoSize)
 	}
@@ -116,17 +121,17 @@ func Main(name string, newer ClientNewer) {
 		st := strconv.Itoa(sleepTime)
 		payload = fmt.Sprintf("%s,%s", st, payload[len(st)+1:])
 	}
-	handler := func() error { return cli.Echo(action, payload, field, latency, int64(echoSize), isStream) }
+	handler := func() error { return cli.Echo(action, payload, field, latency, int64(echoSize), isStream, isTCPCostTest) }
 
 	// === warming ===
-	if isStream == 1 {
+	if isStream == 1 || isTCPCostTest == 1 {
 		r.StreamingWarmup(handler, 1)
 	} else {
 		r.Warmup(handler, concurrent, 100*1000)
 	}
 
 	// === beginning ===
-	if err := cli.Echo(BeginAction, "", 0, 0, 0, 0); err != nil {
+	if err := cli.Echo(BeginAction, "", 0, 0, 0, 0, 0); err != nil {
 		log.Fatalf("beginning server failed: %v", err)
 	}
 	recorder := perf.NewRecorder(fmt.Sprintf("%s@Client", name))
@@ -138,6 +143,8 @@ func Main(name string, newer ClientNewer) {
 	// === benching ===
 	if isStream == 1 {
 		r.RunStream(name, handler, total, echoSize)
+	} else if isTCPCostTest == 1 {
+		r.RunTCPCostTest(name, handler, total, echoSize)
 	} else {
 		r.Run(name, handler, concurrent, total, echoSize, sleepTime, field, latency)
 	}
@@ -145,7 +152,7 @@ func Main(name string, newer ClientNewer) {
 
 	// == ending ===
 	recorder.End()
-	if err := cli.Echo(EndAction, "", 0, 0, 0, 0); err != nil {
+	if err := cli.Echo(EndAction, "", 0, 0, 0, 0, 0); err != nil {
 		log.Fatalf("ending server failed: %v", err)
 	}
 

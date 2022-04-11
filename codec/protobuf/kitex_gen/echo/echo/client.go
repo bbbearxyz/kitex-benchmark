@@ -15,9 +15,16 @@ import (
 type Client interface {
 	Send(ctx context.Context, Req *echo.Request, callOptions ...callopt.Option) (r *echo.Response, err error)
 	StreamTest(ctx context.Context, callOptions ...callopt.Option) (stream Echo_StreamTestClient, err error)
+	TCPCostTest(ctx context.Context, callOptions ...callopt.Option) (stream Echo_TCPCostTestClient, err error)
 }
 
 type Echo_StreamTestClient interface {
+	streaming.Stream
+	Send(*echo.Request) error
+	Recv() (*echo.Response, error)
+}
+
+type Echo_TCPCostTestClient interface {
 	streaming.Stream
 	Send(*echo.Request) error
 	Recv() (*echo.Response, error)
@@ -62,4 +69,9 @@ func (p *kEchoClient) Send(ctx context.Context, Req *echo.Request, callOptions .
 func (p *kEchoClient) StreamTest(ctx context.Context, callOptions ...callopt.Option) (stream Echo_StreamTestClient, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.StreamTest(ctx)
+}
+
+func (p *kEchoClient) TCPCostTest(ctx context.Context, callOptions ...callopt.Option) (stream Echo_TCPCostTestClient, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.TCPCostTest(ctx)
 }

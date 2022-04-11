@@ -52,7 +52,7 @@ type pbGrpcClient struct {
 	connpool *runner.Pool
 }
 
-func (cli *pbGrpcClient) Echo(action, msg string, field, latency, payload, isStream int64) error {
+func (cli *pbGrpcClient) Echo(action, msg string, field, latency, payload, isStream, isTCPCostTest int64) error {
 	ctx := context.Background()
 	req := cli.reqPool.Get().(*grpcg.Request)
 	defer cli.reqPool.Put(req)
@@ -60,7 +60,7 @@ func (cli *pbGrpcClient) Echo(action, msg string, field, latency, payload, isStr
 	req.Action = action
 	req.Time = latency
 
-	if req.Action == runner.EchoAction{
+	if req.Action == runner.EchoAction {
 		if field == 1 || isStream == 1 {
 			req.Field1 = msg
 		} else if field == 5 {
@@ -92,6 +92,20 @@ func (cli *pbGrpcClient) Echo(action, msg string, field, latency, payload, isStr
 	var reply *grpcg.Response
 	if isStream == 1 {
 		stream, _ := pbcli.StreamTest(ctx)
+		req.Length = payload
+		stream.Send(req)
+		for true {
+			res, err := stream.Recv()
+			if err != nil {
+				println(err.Error())
+			}
+			if res.IsEnd {
+				break
+			}
+		}
+		stream.CloseSend()
+	} else if isTCPCostTest == 1 {
+		stream, _ := pbcli.TCPCostTest(ctx)
 		req.Length = payload
 		stream.Send(req)
 		for true {

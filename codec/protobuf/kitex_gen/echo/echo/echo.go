@@ -22,8 +22,9 @@ func NewServiceInfo() *kitex.ServiceInfo {
 	serviceName := "Echo"
 	handlerType := (*echo.Echo)(nil)
 	methods := map[string]kitex.MethodInfo{
-		"Send":       kitex.NewMethodInfo(sendHandler, newSendArgs, newSendResult, false),
-		"StreamTest": kitex.NewMethodInfo(streamTestHandler, newStreamTestArgs, newStreamTestResult, false),
+		"Send":        kitex.NewMethodInfo(sendHandler, newSendArgs, newSendResult, false),
+		"StreamTest":  kitex.NewMethodInfo(streamTestHandler, newStreamTestArgs, newStreamTestResult, false),
+		"TCPCostTest": kitex.NewMethodInfo(tCPCostTestHandler, newTCPCostTestArgs, newTCPCostTestResult, false),
 	}
 	extra := map[string]interface{}{
 		"PackageName": "protobuf",
@@ -252,6 +253,115 @@ func (p *StreamTestResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
+func tCPCostTestHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	st := arg.(*streaming.Args).Stream
+	stream := &echoTCPCostTestServer{st}
+	return handler.(echo.Echo).TCPCostTest(stream)
+}
+
+type echoTCPCostTestClient struct {
+	streaming.Stream
+}
+
+func (x *echoTCPCostTestClient) Send(m *echo.Request) error {
+	return x.Stream.SendMsg(m)
+}
+func (x *echoTCPCostTestClient) Recv() (*echo.Response, error) {
+	m := new(echo.Response)
+	return m, x.Stream.RecvMsg(m)
+}
+
+type echoTCPCostTestServer struct {
+	streaming.Stream
+}
+
+func (x *echoTCPCostTestServer) Send(m *echo.Response) error {
+	return x.Stream.SendMsg(m)
+}
+
+func (x *echoTCPCostTestServer) Recv() (*echo.Request, error) {
+	m := new(echo.Request)
+	return m, x.Stream.RecvMsg(m)
+}
+
+func newTCPCostTestArgs() interface{} {
+	return &TCPCostTestArgs{}
+}
+
+func newTCPCostTestResult() interface{} {
+	return &TCPCostTestResult{}
+}
+
+type TCPCostTestArgs struct {
+	Req *echo.Request
+}
+
+func (p *TCPCostTestArgs) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetReq() {
+		return out, fmt.Errorf("No req in TCPCostTestArgs")
+	}
+	return proto.Marshal(p.Req)
+}
+
+func (p *TCPCostTestArgs) Unmarshal(in []byte) error {
+	msg := new(echo.Request)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Req = msg
+	return nil
+}
+
+var TCPCostTestArgs_Req_DEFAULT *echo.Request
+
+func (p *TCPCostTestArgs) GetReq() *echo.Request {
+	if !p.IsSetReq() {
+		return TCPCostTestArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+
+func (p *TCPCostTestArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+type TCPCostTestResult struct {
+	Success *echo.Response
+}
+
+var TCPCostTestResult_Success_DEFAULT *echo.Response
+
+func (p *TCPCostTestResult) Marshal(out []byte) ([]byte, error) {
+	if !p.IsSetSuccess() {
+		return out, fmt.Errorf("No req in TCPCostTestResult")
+	}
+	return proto.Marshal(p.Success)
+}
+
+func (p *TCPCostTestResult) Unmarshal(in []byte) error {
+	msg := new(echo.Response)
+	if err := proto.Unmarshal(in, msg); err != nil {
+		return err
+	}
+	p.Success = msg
+	return nil
+}
+
+func (p *TCPCostTestResult) GetSuccess() *echo.Response {
+	if !p.IsSetSuccess() {
+		return TCPCostTestResult_Success_DEFAULT
+	}
+	return p.Success
+}
+
+func (p *TCPCostTestResult) SetSuccess(x interface{}) {
+	p.Success = x.(*echo.Response)
+}
+
+func (p *TCPCostTestResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
 type kClient struct {
 	c client.Client
 }
@@ -283,5 +393,19 @@ func (p *kClient) StreamTest(ctx context.Context) (Echo_StreamTestClient, error)
 		return nil, err
 	}
 	stream := &echoStreamTestClient{res.Stream}
+	return stream, nil
+}
+
+func (p *kClient) TCPCostTest(ctx context.Context) (Echo_TCPCostTestClient, error) {
+	streamClient, ok := p.c.(client.Streaming)
+	if !ok {
+		return nil, fmt.Errorf("client not support streaming")
+	}
+	res := new(streaming.Result)
+	err := streamClient.Stream(ctx, "TCPCostTest", nil, res)
+	if err != nil {
+		return nil, err
+	}
+	stream := &echoTCPCostTestClient{res.Stream}
 	return stream, nil
 }
