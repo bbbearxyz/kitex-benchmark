@@ -4,14 +4,14 @@ CURDIR=$(cd $(dirname $0); pwd)
 
 source $CURDIR/env.sh
 
-repo=("grpc" "kitex" "dubbo")
-ports=(8000 8002 8004)
+repo=("grpc" "kitex")
+ports=(8000 8002)
 
 # 默认为127.0.0.1
 ip=${IP:-"10.222.1.129"}
 
 # build
-source $CURDIR/build_grpc.sh
+source $CURDIR/build.sh
 
 # benchmark
 for b in ${body[@]}; do
@@ -24,7 +24,7 @@ for b in ${body[@]}; do
 
           # run client
           echo "Client [$rp] running with [$taskset_client]"
-          $cmd_client $output_dir/bin/${rp}_bencher -addr="$addr" -b=$b -c=$c -n=$n --sleep=$sleep -field=$d -latency=$e -isStream=0 | $tee_cmd
+          $cmd_client $output_dir/bin/${rp}_bencher -addr="$addr" -b=$b -c=$c -n=$n --sleep=$sleep -field=$d -latency=$e -isStream=0 -isTCPCostTest=0 | $tee_cmd
         done
       done
     done

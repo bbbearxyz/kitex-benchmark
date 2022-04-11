@@ -30,6 +30,7 @@ message Response {
 service Echo {
     rpc Send(Request) returns (Response) {}
     rpc StreamTest(stream Request) returns (stream Response) {}
+    rpc TCPCostTest(stream Request) returns (stream Response) {}
 }
 
 

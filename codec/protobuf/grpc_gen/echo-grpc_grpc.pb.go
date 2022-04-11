@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type EchoClient interface {
 	Send(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
 	StreamTest(ctx context.Context, opts ...grpc.CallOption) (Echo_StreamTestClient, error)
+	TCPCostTest(ctx context.Context, opts ...grpc.CallOption) (Echo_TCPCostTestClient, error)
 }
 
 type echoClient struct {
@@ -74,12 +75,44 @@ func (x *echoStreamTestClient) Recv() (*Response, error) {
 	return m, nil
 }
 
+func (c *echoClient) TCPCostTest(ctx context.Context, opts ...grpc.CallOption) (Echo_TCPCostTestClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Echo_ServiceDesc.Streams[1], "/protobuf.Echo/TCPCostTest", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &echoTCPCostTestClient{stream}
+	return x, nil
+}
+
+type Echo_TCPCostTestClient interface {
+	Send(*Request) error
+	Recv() (*Response, error)
+	grpc.ClientStream
+}
+
+type echoTCPCostTestClient struct {
+	grpc.ClientStream
+}
+
+func (x *echoTCPCostTestClient) Send(m *Request) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *echoTCPCostTestClient) Recv() (*Response, error) {
+	m := new(Response)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // EchoServer is the server API for Echo service.
 // All implementations must embed UnimplementedEchoServer
 // for forward compatibility
 type EchoServer interface {
 	Send(context.Context, *Request) (*Response, error)
 	StreamTest(Echo_StreamTestServer) error
+	TCPCostTest(Echo_TCPCostTestServer) error
 	mustEmbedUnimplementedEchoServer()
 }
 
@@ -92,6 +125,9 @@ func (UnimplementedEchoServer) Send(context.Context, *Request) (*Response, error
 }
 func (UnimplementedEchoServer) StreamTest(Echo_StreamTestServer) error {
 	return status.Errorf(codes.Unimplemented, "method StreamTest not implemented")
+}
+func (UnimplementedEchoServer) TCPCostTest(Echo_TCPCostTestServer) error {
+	return status.Errorf(codes.Unimplemented, "method TCPCostTest not implemented")
 }
 func (UnimplementedEchoServer) mustEmbedUnimplementedEchoServer() {}
 
@@ -150,6 +186,32 @@ func (x *echoStreamTestServer) Recv() (*Request, error) {
 	return m, nil
 }
 
+func _Echo_TCPCostTest_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(EchoServer).TCPCostTest(&echoTCPCostTestServer{stream})
+}
+
+type Echo_TCPCostTestServer interface {
+	Send(*Response) error
+	Recv() (*Request, error)
+	grpc.ServerStream
+}
+
+type echoTCPCostTestServer struct {
+	grpc.ServerStream
+}
+
+func (x *echoTCPCostTestServer) Send(m *Response) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *echoTCPCostTestServer) Recv() (*Request, error) {
+	m := new(Request)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // Echo_ServiceDesc is the grpc.ServiceDesc for Echo service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -166,6 +228,12 @@ var Echo_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "StreamTest",
 			Handler:       _Echo_StreamTest_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "TCPCostTest",
+			Handler:       _Echo_TCPCostTest_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},

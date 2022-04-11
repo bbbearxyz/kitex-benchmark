@@ -26,34 +26,25 @@ import (
 )
 
 const (
-	port = 8003
+	port = 8002
 )
 
 var data []byte
-var recorder = perf.NewRecorder("TCP@Server")
+var recorder = perf.NewRecorder("TCP-COST-TEST@Server")
 
-func StreamTest(c net.Conn) error {
+func TCPCostTest(c net.Conn) error {
 	recorder.Begin()
-	buf := make([]byte, 256)
+	buf := make([]byte, 64)
 	c.Read(buf)
 	length, _ := binary.Varint(buf)
 
 	// 计算1GB / length的次数
-	round := int64(0)
+	round := int64(100)
 	sendDataLength := int64(length)
-	lastDataLength := int64(0)
-
-	if 1024 * 1024 * 1024 % length == 0 {
-		round = 1024 * 1024 * 1024 / length
-		lastDataLength = sendDataLength
-	} else {
-		round = 1024 * 1024 * 1024 / length + 1
-		lastDataLength = 1024 * 1024 * 1024 - (sendDataLength * (round - 1))
-	}
 
 	for i := int64(0); i < round; i ++ {
 		if i == round - 1 {
-			c.Write(data[0: lastDataLength])
+			c.Write(data[0: sendDataLength])
 			break
 		}
 		c.Write(data[0: sendDataLength])
@@ -82,6 +73,6 @@ func main() {
 		if err != nil {
 			log.Fatalf("failed to accept: %v", err)
 		}
-		go StreamTest(conn)
+		go TCPCostTest(conn)
 	}
 }

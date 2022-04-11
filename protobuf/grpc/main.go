@@ -79,6 +79,23 @@ func (s *server) StreamTest(stream grpcg.Echo_StreamTestServer) error {
 	return nil
 }
 
+func (s *server) TCPCostTest(stream grpcg.Echo_TCPCostTestServer) error {
+	// 计算1GB / length的次数
+	req, _ := stream.Recv()
+	length := req.Length
+	round := int64(100)
+	sendDataLength := int64(length)
+
+	for i := int64(0); i < round; i ++ {
+		if i == round - 1 {
+			stream.Send(&grpcg.Response{Msg: data[0: sendDataLength], IsEnd: true})
+			break
+		}
+		stream.Send(&grpcg.Response{Msg: data[0: sendDataLength], IsEnd: false})
+	}
+	return nil
+}
+
 func main() {
 	// 产生100mb的数据为了测试流的性能
 	data = runner.GetRandomString(100 * 1024 * 1024)

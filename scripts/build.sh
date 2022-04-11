@@ -19,9 +19,11 @@ $GOEXEC mod edit -replace=github.com/apache/thrift=github.com/apache/thrift@v0.1
 $GOEXEC mod tidy
 $GOEXEC build -v -o $output_dir/bin/grpc_bencher $grpc_dir/grpc/client
 $GOEXEC build -v -o $output_dir/bin/grpc_reciever $grpc_dir/grpc
-$GOEXEC build -v -o $output_dir/bin/grpc-tracer_bencher $grpc_dir/grpc-tracer/client
-$GOEXEC build -v -o $output_dir/bin/grpc-tracer_reciever $grpc_dir/grpc-tracer
-$GOEXEC build -v -o $output_dir/bin/tcp_bencher $grpc_dir/tcp/client
-$GOEXEC build -v -o $output_dir/bin/tcp_reciever $grpc_dir/tcp
-$GOEXEC build -v -o $output_dir/bin/dubbo_bencher $grpc_dir/dubbo/client
-$GOEXEC build -v -o $output_dir/bin/dubbo_reciever $grpc_dir/dubbo
+#$GOEXEC build -v -o $output_dir/bin/grpc-tracer_bencher $grpc_dir/grpc-tracer/client
+#$GOEXEC build -v -o $output_dir/bin/grpc-tracer_reciever $grpc_dir/grpc-tracer
+$GOEXEC build -v -o $output_dir/bin/tcp-streaming_bencher $grpc_dir/tcp-streaming/client
+$GOEXEC build -v -o $output_dir/bin/tcp-streaming_reciever $grpc_dir/tcp-streaming
+$GOEXEC build -v -o $output_dir/bin/tcp-cost-test_bencher $grpc_dir/tcp-cost-test/client
+$GOEXEC build -v -o $output_dir/bin/tcp-cost-test_reciever $grpc_dir/tcp-cost-test
+#$GOEXEC build -v -o $output_dir/bin/dubbo_bencher $grpc_dir/dubbo/client
+#$GOEXEC build -v -o $output_dir/bin/dubbo_reciever $grpc_dir/dubbo

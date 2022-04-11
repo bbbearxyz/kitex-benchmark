@@ -3,14 +3,14 @@ set -e
 CURDIR=$(cd $(dirname $0); pwd)
 
 echo "Checking whether the environment meets the requirements ..."
-source $CURDIR/env.sh
+source $CURDIR/env-tcp-cost-test.sh
 echo "Check finished."
 
-repo=("grpc" "kitex" "dubbo")
+repo=("grpc" "kitex" "tcp-cost-test")
 
 # build
 echo "Building grpc services by exec build_grpc.sh..."
-source $CURDIR/build_grpc.sh
+source $CURDIR/build.sh
 echo "Build finished."
 
 # benchmark
