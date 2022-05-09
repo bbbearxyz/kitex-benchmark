@@ -9,7 +9,7 @@ echo "Check finished."
 repo=("grpc" "kitex" "tcp-cost-test")
 ports=(8000 8001 8002)
 
-echo "Building grpc services by exec build_grpc.sh..."
+echo "Building grpc services by exec build.sh..."
 source $CURDIR/build.sh
 echo "Build finished."
 # benchmark
@@ -21,6 +21,8 @@ for ((i = 0; i < ${#repo[@]}; i++)); do
   nohup $cmd_server $output_dir/bin/${rp}_reciever >> $output_dir/log/nohup.log 2>&1 &
   sleep 1
   echo "Server [$rp] running with [$cmd_server]"
+
+// 参数有问题
 
   # run client
   echo "Client [$rp] running with [$cmd_client]"

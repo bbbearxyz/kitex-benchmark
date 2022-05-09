@@ -6,11 +6,11 @@ echo "Checking whether the environment meets the requirements ..."
 source $CURDIR/env-streaming.sh
 echo "Check finished."
 
-repo=("grpc" "kitex" "tcp-streaming")
+repo=("grpc" "kitex" "tcp-streaming" "tchannel")
 
 # build
 echo "Building grpc services by exec build_grpc.sh..."
-source $CURDIR/build_grpc.sh
+source $CURDIR/build.sh
 echo "Build finished."
 
 # benchmark

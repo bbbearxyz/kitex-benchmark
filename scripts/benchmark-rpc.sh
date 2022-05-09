@@ -6,10 +6,10 @@ echo "Checking whether the environment meets the requirements ..."
 source $CURDIR/env.sh
 echo "Check finished."
 
-repo=("grpc" "kitex")
-ports=(8000 8001)
+repo=("grpc" "kitex" "tchannel")
+ports=(8000 8001 8004)
 
-echo "Building grpc services by exec build_grpc.sh..."
+echo "Building grpc services by exec build.sh..."
 source $CURDIR/build.sh
 echo "Build finished."
 # benchmark

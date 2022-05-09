@@ -33,7 +33,6 @@ var data []byte
 var recorder = perf.NewRecorder("TCP-COST-TEST@Server")
 
 func TCPCostTest(c net.Conn) error {
-	recorder.Begin()
 	buf := make([]byte, 64)
 	c.Read(buf)
 	length, _ := binary.Varint(buf)
@@ -50,8 +49,6 @@ func TCPCostTest(c net.Conn) error {
 		c.Write(data[0: sendDataLength])
 	}
 	c.Close()
-	recorder.End()
-	recorder.Report()
 	return nil
 }
 

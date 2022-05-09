@@ -17,15 +17,15 @@
 package main
 
 import (
-	"context"
-	"dubbo.apache.org/dubbo-go/v3/config"
 	"fmt"
-	dubbo "github.com/bbbearxyz/kitex-benchmark/codec/protobuf/dubbo_gen"
-	"github.com/bbbearxyz/kitex-benchmark/perf"
-	"github.com/bbbearxyz/kitex-benchmark/runner"
+	tchannel "github.com/bbbearxyz/another-tchannel-go"
+	"github.com/bbbearxyz/another-tchannel-go/pb"
+	"github.com/bbbearxyz/kitex-benchmark/codec/protobuf/tchannel_gen"
+	"net"
 	"time"
 
-	_ "dubbo.apache.org/dubbo-go/v3/imports"
+	"github.com/bbbearxyz/kitex-benchmark/perf"
+	"github.com/bbbearxyz/kitex-benchmark/runner"
 )
 
 const (
@@ -33,25 +33,26 @@ const (
 )
 
 var data string
-var recorder = perf.NewRecorder("DUBBO@Server")
+var recorder = perf.NewRecorder("GRPC@Server")
 
-type Server struct {
-	dubbo.UnimplementedEchoServer
+type server struct {
+
 }
 
-func (s *Server) Send(ctx context.Context, req *dubbo.Request) (*dubbo.Response, error) {
+func (s *server) Send(ctx pb.Context, req *tchannel_gen.Request) (*tchannel_gen.Response, error) {
 	time.Sleep(time.Duration(req.Time) * time.Millisecond)
 	// 正常只需要返回一个空的msg
 	resp := runner.ProcessRequest(recorder, req.Action, "")
-
-	return &dubbo.Response{
+	return &tchannel_gen.Response{
 		Msg:    resp.Msg,
 		Action: resp.Action,
 	}, nil
 }
 
-func (s *Server) StreamTest(stream dubbo.Echo_StreamTestServer) error {
+func (s *server) StreamTest(stream tchannel_gen.Echo_StreamTest_Server) error {
 	// 计算1GB / length的次数
+	// 空的msg
+	stream.Send(&tchannel_gen.Response{Msg: ""})
 	req, _ := stream.Recv()
 	length := req.Length
 	round := int64(0)
@@ -68,11 +69,12 @@ func (s *Server) StreamTest(stream dubbo.Echo_StreamTestServer) error {
 
 	for i := int64(0); i < round; i ++ {
 		if i == round - 1 {
-			stream.Send(&dubbo.Response{Msg: data[0: lastDataLength], IsEnd: true})
+			stream.Send(&tchannel_gen.Response{Msg: data[0: lastDataLength], IsEnd: true})
 			break
 		}
-		stream.Send(&dubbo.Response{Msg: data[0: sendDataLength], IsEnd: false})
+		stream.Send(&tchannel_gen.Response{Msg: data[0: sendDataLength], IsEnd: false})
 	}
+	stream.Close()
 	return nil
 }
 
@@ -85,11 +87,19 @@ func main() {
 		perf.ServeMonitor(fmt.Sprintf(":%d", port+10000))
 	}()
 
-	config.SetProviderService(&Server{})
-	// start dubbo-go framework with configuration
-	if err := config.Load(); err != nil{
-		panic(err)
-	}
 
-	select {}
+	tchan, _ := tchannel.NewChannel("server", nil)
+
+	listener, _ := net.Listen("tcp", fmt.Sprintf(":%d", port))
+
+
+	ser := pb.NewServer(tchan)
+	ser.Register(tchannel_gen.NewEchoServer(&server{}))
+
+	// Serve will set the local peer info, and start accepting sockets in a separate goroutine.
+	tchan.Serve(listener)
+
+	for {
+
+	}
 }
