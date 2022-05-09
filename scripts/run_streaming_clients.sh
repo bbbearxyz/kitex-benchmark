@@ -4,14 +4,14 @@ CURDIR=$(cd $(dirname $0); pwd)
 
 source $CURDIR/env-streaming.sh
 
-repo=("grpc" "kitex ""tcp-streaming")
-ports=(8000 8001 8003)
+repo=("grpc" "kitex" "tcp-streaming" "tchannel")
+ports=(8000 8001 8003 8004)
 
 # 默认为127.0.0.1
 ip=${IP:-"10.222.1.129"}
 
 # build
-source $CURDIR/build_grpc.sh
+source $CURDIR/build.sh
 
 # benchmark
 for b in ${body[@]}; do

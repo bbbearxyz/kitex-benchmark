@@ -1,6 +1,6 @@
 syntax = "proto3";
 package protobuf;
-option go_package="./;dubbo";
+option go_package = "github.com/bbbearxyz/kitex-benchmark/common/protobuf/yarpc";
 
 //--------------------request & response--------------
 
@@ -30,6 +30,7 @@ message Response {
 service Echo {
     rpc Send(Request) returns (Response) {}
     rpc StreamTest(stream Request) returns (stream Response) {}
+    rpc TCPCostTest(stream Request) returns (stream Response) {}
 }
 
 

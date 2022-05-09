@@ -17,49 +17,47 @@
 package main
 
 import (
-	"context"
-	"dubbo.apache.org/dubbo-go/v3/config"
-	_ "dubbo.apache.org/dubbo-go/v3/imports"
-	dubbo "github.com/bbbearxyz/kitex-benchmark/codec/protobuf/dubbo_gen"
-	"github.com/bbbearxyz/kitex-benchmark/runner"
+	tchannel "github.com/bbbearxyz/another-tchannel-go"
+	"github.com/bbbearxyz/another-tchannel-go/pb"
+	"github.com/bbbearxyz/kitex-benchmark/codec/protobuf/tchannel_gen"
 	"sync"
 	"time"
+
+	"github.com/bbbearxyz/kitex-benchmark/runner"
 )
 
-
-func NewPBDubboClient(opt *runner.Options) runner.Client {
-	cli := &pbDubboClient{}
-	cli.client = new(dubbo.EchoClientImpl)
-
-	config.SetConsumerService(cli.client)
-
-	// start dubbo-go framework with configuration
-	if err := config.Load(); err != nil{
-		panic(err)
-	}
-
+func NewPBTchannelClient(opt *runner.Options) runner.Client {
+	cli := &pbGrpcClient{}
 	cli.reqPool = &sync.Pool{
 		New: func() interface{} {
-			return &dubbo.Request{}
+			return &tchannel_gen.Request{}
 		},
 	}
+	tchan, _ := tchannel.NewChannel("client1", nil)
+	tchan.Peers().Add(opt.Address)
+	cli.connpool = runner.NewPool(func() interface{} {
+		// Set up a connection to the server.
+		// 配置参数
+		tclient := pb.NewClient(tchan, "server", nil)
+
+		return tchannel_gen.NewEchoClient(tclient)
+	}, opt.PoolSize)
 	return cli
 }
 
-type pbDubboClient struct {
+type pbGrpcClient struct {
 	reqPool  *sync.Pool
-	client   *dubbo.EchoClientImpl
+	connpool *runner.Pool
 }
 
-func (cli *pbDubboClient) Echo(action, msg string, field, latency, payload, isStream int64) error {
-	ctx := context.Background()
-	req := cli.reqPool.Get().(*dubbo.Request)
+func (cli *pbGrpcClient) Echo(action, msg string, field, latency, payload, isStream, isTCPCostTest int64) error {
+	req := cli.reqPool.Get().(*tchannel_gen.Request)
 	defer cli.reqPool.Put(req)
 
 	req.Action = action
 	req.Time = latency
 
-	if req.Action == runner.EchoAction{
+	if req.Action == runner.EchoAction {
 		if field == 1 || isStream == 1 {
 			req.Field1 = msg
 		} else if field == 5 {
@@ -84,15 +82,17 @@ func (cli *pbDubboClient) Echo(action, msg string, field, latency, payload, isSt
 		}
 	}
 
-	pbcli := cli.client
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	pbcli := cli.connpool.Get().(tchannel_gen.EchoClient)
+	ctx, cancel := pb.NewContext(time.Minute)
 	defer cancel()
 	var err error
-	var reply *dubbo.Response
+	var reply *tchannel_gen.Response
 	if isStream == 1 {
 		stream, _ := pbcli.StreamTest(ctx)
 		req.Length = payload
+		// 目前实现的bug
 		stream.Send(req)
+		stream.Recv()
 		for true {
 			res, err := stream.Recv()
 			if err != nil {
@@ -102,10 +102,9 @@ func (cli *pbDubboClient) Echo(action, msg string, field, latency, payload, isSt
 				break
 			}
 		}
-		stream.CloseSend()
+		stream.Close()
 	} else {
 		reply, err = pbcli.Send(ctx, req)
-
 		if reply != nil {
 			runner.ProcessResponse(reply.Action, reply.Msg)
 		}

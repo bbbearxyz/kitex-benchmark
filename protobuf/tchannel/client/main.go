@@ -22,5 +22,5 @@ import (
 
 // main is use for routing.
 func main() {
-	runner.Main("Dubbo", NewPBDubboClient)
+	runner.Main("TCHANNEL", NewPBTchannelClient)
 }

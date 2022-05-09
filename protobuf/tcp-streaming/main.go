@@ -33,7 +33,6 @@ var data []byte
 var recorder = perf.NewRecorder("TCP-STREAMING@Server")
 
 func StreamTest(c net.Conn) error {
-	recorder.Begin()
 	buf := make([]byte, 256)
 	c.Read(buf)
 	length, _ := binary.Varint(buf)
@@ -59,8 +58,6 @@ func StreamTest(c net.Conn) error {
 		c.Write(data[0: sendDataLength])
 	}
 	c.Close()
-	recorder.End()
-	recorder.Report()
 	return nil
 }
 

@@ -2,9 +2,9 @@
 set -e
 CURDIR=$(cd $(dirname $0); pwd)
 
-source $CURDIR/env-streaming.sh
+source $CURDIR/env-tcp-cost-test.sh
 
-repo=("grpc" "kitex ""tcp-cost-test")
+repo=("grpc" "kitex" "tcp-cost-test")
 ports=(8000 8001 8002)
 
 # 默认为127.0.0.1

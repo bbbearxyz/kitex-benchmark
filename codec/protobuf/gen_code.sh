@@ -13,3 +13,7 @@ kitex -type protobuf -module github.com/bbbearxyz/kitex-benchmark ./echo-kitex.p
 ## tars-gen
 #rm -rf ./tars_gen && mkdir ./tars_gen
 #protoc --go_out=plugins=tarsrpc:./tars_gen --go_opt=paths=source_relative ./echo-tars.proto
+
+# yarpc-gen
+rm -rf ./yarpc_gen && mkdir ./yarpc_gen
+protoc --gogoslick_out=./yarpc_gen --gogoslick_opt=paths=source_relative --yarpc-go_out=./yarpc_gen --yarpc-go_opt=paths=source_relative ./echo-yarpc.proto
