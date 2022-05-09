@@ -8,7 +8,7 @@ repo=("grpc" "kitex" "tchannel")
 ports=(8000 8002 8004)
 
 # 默认为127.0.0.1
-ip=${IP:-"10.222.1.129"}
+ip=${IP:-"10.222.1.128"}
 
 # build
 source $CURDIR/build.sh

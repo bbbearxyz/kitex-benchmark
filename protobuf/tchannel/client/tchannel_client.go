@@ -83,7 +83,7 @@ func (cli *pbGrpcClient) Echo(action, msg string, field, latency, payload, isStr
 	}
 
 	pbcli := cli.connpool.Get().(tchannel_gen.EchoClient)
-	ctx, cancel := pb.NewContext(time.Minute)
+	ctx, cancel := pb.NewContext(time.Hour)
 	defer cancel()
 	var err error
 	var reply *tchannel_gen.Response

@@ -34,7 +34,7 @@ func NewPBKiteXClient(opt *runner.Options) runner.Client {
 	cli.client = echosvr.MustNewClient("test.echo.kitex",
 		client.WithHostPorts(opt.Address),
 		client.WithLongConnection(
-			connpool.IdleConfig{MaxIdlePerAddress: 1000, MaxIdleGlobal: 1000, MaxIdleTimeout: time.Minute}),
+			connpool.IdleConfig{MaxIdlePerAddress: 1000, MaxIdleGlobal: 1000, MaxIdleTimeout: time.Hour}),
 	)
 	cli.reqPool = &sync.Pool{
 		New: func() interface{} {
@@ -83,7 +83,7 @@ func (cli *pbKitexClient) Echo(action, msg string, field, latency, payload, isSt
 	}
 
 	pbcli := cli.client
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
 	defer cancel()
 
 	var reply *echo.Response
